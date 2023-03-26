@@ -57,10 +57,66 @@ void loop() {
 }
 
 
+void mysetup(); 
+- загрузка данных:  for (word i = 0; i < (sizeof(TASK) / sizeof(TASK[0])); i++) TASK[i] = demo32[i];
 
+void myloop() {
+              if (rflag) {                  // если движок активен
+                         sendline();        // оправить на выход 1 строку (64 бит)             
+                         delay(RowDelay);   // second line delay
+                         }
+              if (lflag) lightstrobe();   //delay(StepDelay);  // если свет активен то выполнить процедуру
+}
 
+void sendline() {                     
+  if (pflag) Serial.printf("\nCycle:%03d_Line:%03d_Index:%04d > ", cnt, row, m + 1); // напечатать строку вывода
+  if (dflag) prepgraf();  // подготовить буфер картинки
 
+  digitalWrite(latchPin, 0);                              // главный цикл вывода строки
+  for (i = 0; i < RESTEP; i++) dataOut();                 // процедура ядра dataOut() - оригинальная  
+  digitalWrite(latchPin, 1);                              // запись данных в регистры по стробу latch
 
+  y++;
+    if (y > Hs) {      y = 0;      display.clearDisplay();    }
+    
+  row++;
+    if (row > Rs) row = 1;  //rows for counter  
+    
+  }
+  
+  
+  int ii,pinState;
+void shiftOut(byte myDataOut) {
+  ii=0;
+  //int pinState;
+  pinMode(clockPin, OUTPUT);
+  pinMode(dataPin, OUTPUT);
 
+  digitalWrite(dataPin, 0);
+  digitalWrite(clockPin, 0);
 
+  //This means that %00000001 or "1" will go through such that it will be pin Q0 that lights. 
+  for (ii=7; ii>=0; ii--)  {
+    digitalWrite(clockPin, 0);
+
+    if ( myDataOut & (1<<ii) ) {   // bitread  bitRead(aByte, aBit) ? '1' : '0'
+      pinState= 1;
+    }
+    else {	
+      pinState= 0;
+    }
+
+    //Sets the pin to HIGH or LOW depending on pinState
+    digitalWrite(dataPin, pinState);
+    //register shifts bits on upstroke of clock pin  
+    digitalWrite(clockPin, 1);
+    //zero the data pin after shift to prevent bleed through
+    digitalWrite(dataPin, 0);
+  }
+
+  //stop shifting
+  digitalWrite(clockPin, 0);
+}
+  
+    
 
